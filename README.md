@@ -1,19 +1,19 @@
 # Drop rebound at low Weber number
-This repository provides a python version of the MATLAB scripts from [this repository](https://github.com/harrislab-brown/LowWeberDropRebound?tab=readme-ov-file) for simulating the dynamics of liquid droplets impacting solid substrates. The code systematically explores droplet deformation, spreading, rebound behaviors, and other key physical phenomena, capturing detailed dynamics through numerical simulations.
+This repository provides a Julia version of the Python scripts from [this repository](https://github.com/harrislab-brown/LowWeberDropRebound?tab=readme-ov-file) for simulating the dynamics of liquid droplets impacting solid substrates. The code systematically explores droplet deformation, spreading, rebound behaviors, and other key physical phenomena, capturing detailed dynamics through numerical simulations.
 
 ## Overview 
 The project models the complex behavior of liquid droplets when they impact solid surfaces, capturing phenomena like maximum spreading, bounce optimization, energy transfer, and shape deformation using a numerical approach based on spherical harmonics and Newton-Raphson methods. It includes simulation sweeps for parameter exploration such as Weber number (`We`), Bond number (`Bo`), and Ohnesorge number (`Oh`).
 
-# Python Code
-Simulations can be run in bulk sweeps or individually. 
+# Julia Code
+Simulations can be run in bulk sweeps or individually. Different from Python, Julia is a JIT compiled language, and details of its installation can be found [here](https://julialang.org/install/). It will be necessary to install additional packages depending on your current package configuration. Instructions on package installation through the command line can be found [here](https://how.dev/answers/how-to-install-julia-packages-via-command-line).
 
 ## For Simulation Sweeps
-To perform simulation sweeps, use the [drop_simulations_sweep.py](https://github.com/Katiekuehr/Drop_Simulations/blob/main/drop_simulations_sweep.py) script. 
+To perform simulation sweeps, use the `sweep_plots.jl` script from this folder [drop_simulations_sweep](https://github.com/Katiekuehr/Drop_Simulations/blob/main/drop_simulations_sweep.py). 
 
 The function `plot_and_save()` can be called with either **dimensional parameters** (`rho_in_CGS`= fluid density, `sigma_in_CGS` = surface tension, `nu_in_GCS` = kinematic viscosity, `V_in_CGS` = initial velocity) or **non-dimensional parameters** (`Bond`, `Web`, `Ohn`) along with `R_in_CGS`.
 
 - `plot_and_save()` runs a single simulation for the given input parameters and saves the resulting data and plots in the following directory structure:
-  - **Main directory:** `desktop_path = 'Mode_Convergence_R={R_in_CGS}_modes={n_thetas}_Web={We}'`
+  - **Main directory:** `desktop_path = 'drop_simulations_sweep/Mode_Convergence_R={R_in_CGS}_modes={n_thetas}_Web={We}'`
   - **Subdirectory:** `folder_name = 'simulation_We={We}_Oh={Oh}_Bo={Bo}_modes={n_thetas}'`
   
 Both `desktop_path` and `folder_name` are automatically created in this structure, with the `folder_name` placed inside `desktop_path`.
@@ -28,7 +28,7 @@ To save results to a different location or rename the folder, modify the `deskto
 
 ## Running Single Simulations
 
-For individual simulations, use the [drop_simulations_singular.ipynb](https://github.com/Katiekuehr/Drop_Simulations/blob/main/drop_simulations_singular.ipynb). The simulations will be run in a Jupyter Notebook. Plots and videos will not be automatically saved but require manual downloading. 
+For individual simulations, use the [drop_simulations_singular.ipynb](https://github.com/Katiekuehr/Drop_Simulations/blob/main/drop_simulations_singular.ipynb). The simulations will be run in a Jupyter Notebook. Plots and videos will not be automatically saved and require manual downloading. 
 
 In the "user input" section, adjust the physical constants as desired:
 - **$\rho$** = fluid density

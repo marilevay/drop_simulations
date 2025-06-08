@@ -1068,3 +1068,16 @@ def plot_and_save(R_in_CGS, g_in_CGS=9.8, T_end=10, n_thetas=40, n_sampling_time
 
 
     return["All Files Saved"]
+
+# given an example of how to run the code
+if __name__ == "__main__":
+    # Example parameters
+    R_in_CGS = 0.1  # Radius in cm
+    g_in_CGS = 9.8  # Gravity in cm/s^2
+    T_end = 10      # Duration of simulation in non-dimensional time
+    n_thetas = 40   # Number of sampled angles
+    n_sampling_time_L_mode = 16  # Sampling time for L mode
+
+    # Run the simulation and save results
+    plot_and_save(R_in_CGS, g_in_CGS, T_end, n_thetas, n_sampling_time_L_mode,
+              rho_in_CGS=1.0, sigma_in_CGS=72.0, nu_in_GCS=0.01, V_in_CGS=30.0)
