@@ -3,6 +3,7 @@ Importing necessary packages
 """
 
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.special import roots_legendre
 from scipy.special import eval_legendre
@@ -567,6 +568,8 @@ def running_simulation(n_thetas, n_sampling_time_L_mode, T_end, H, V, Bo, theta_
     all_times_list (list): List of all time steps.
 
     """
+    
+    print('running_simulation')
 
     ind_time = 0
 
@@ -853,7 +856,6 @@ def amplitudes_over_time_plot(all_amps_list, all_times_list, folder_name, n_thet
     return plot_path
 
 def plot_and_save(R_in_CGS, g_in_CGS=9.8, T_end=10, n_thetas=40, n_sampling_time_L_mode=16, Bond=None, Web=None, Ohn=None, rho_in_CGS=None, sigma_in_CGS=None, nu_in_GCS=None, V_in_CGS=None):
-
     """
     Function that runs the simulation and saves all results and plots to a designated path on your computer.
 
@@ -880,132 +882,18 @@ def plot_and_save(R_in_CGS, g_in_CGS=9.8, T_end=10, n_thetas=40, n_sampling_time
     (and all others = None).
 
     Outputs: 
-    Saves all plots and data to a designated path on your computer.d
+    Saves all plots and data to a designated path on your computer. 
 
     """
 
-    roots, weights = roots_legendre(n_thetas)
-    cos_theta_vec = np.concatenate(([1], np.flip(roots)))
-    theta_vec = np.arccos(cos_theta_vec)
-    q_last = np.argmax(cos_theta_vec <= 0)
-
-    if Bond == None:
-        Bo = rho_in_CGS * g_in_CGS * R_in_CGS**2/ sigma_in_CGS
-    else:
-        Bo = Bond
-
-    if Web == None:
-        We = rho_in_CGS*V_in_CGS**2*R_in_CGS/sigma_in_CGS
-    else:
-        We = Web
-
-    if V_in_CGS == None:
-        V_in_CGS = np.sqrt((Web*sigma_in_CGS)/(rho_in_CGS*R_in_CGS))
-    
-    if Ohn == None:
-        Oh = nu_in_GCS * np.sqrt((rho_in_CGS)/(sigma_in_CGS*R_in_CGS))
-    else:
-        Oh = Ohn
-
     # Change to a different name/ directory as desired
-    desktop_path = os.path.join(f'Mode_Convergence_R={R_in_CGS}_modes={n_thetas}_Web={We})')
-    # Change if sweeping over Weber
-    folder_name = os.path.join(desktop_path, f'simulation_We={We}_Oh={Oh}_Bo={Bo}_modes={n_thetas}')
+    desktop_path = os.path.join(f'python_results/Mode_Convergence_R={R_in_CGS}_modes={n_thetas})')
 
     # Create the main directory if it does not exist
     if not os.path.exists(desktop_path):
         os.makedirs(desktop_path)
-
-    # Create the subdirectory for this simulation
-    if not os.path.exists(folder_name):
-        os.makedirs(folder_name)
-
-    #units
-    unit_length_in_CGS = R_in_CGS
-    unit_time_in_CGS = np.sqrt(rho_in_CGS*R_in_CGS**3/sigma_in_CGS)
-
-    if Bond == None and Web == None:
-        V = -np.sqrt(We)
-        H = 1 #H_in_CGS/unit_length_in_CGS
-
-    else:
-        #Initial height
-        H_in_CGS = R_in_CGS
-
-        #Dimensionless initial conditions
-        V = -np.sqrt(We)
-        H = H_in_CGS/unit_length_in_CGS
-
-
-    #Running Simulations
-    simulation_results = running_simulation(n_thetas, n_sampling_time_L_mode, T_end, H, V, Bo,theta_vec, Oh)
-
-    #Variables to store values of simulation
-    all_amps_list = simulation_results[0]
-    all_amps_vel_list = simulation_results[1]
-    all_press_list = simulation_results[2]
-    all_h_list = simulation_results[3]
-    all_v_list = simulation_results[4]
-    all_m_list = simulation_results[5]
-    all_north_poles_list = simulation_results[6]
-    all_maximum_radii_list = simulation_results[8]
-    all_times_list_original = simulation_results[9]
-    all_times_list = all_times_list_original[: len(all_m_list)]
-    all_south_poles_list = simulation_results[7]
-
-
-    #Reshaping lists to arrays for easier storing in CSV files
-    all_amps_array = np.hstack(np.asarray(all_amps_list))
-    all_amps_vel_array = np.hstack(np.asarray(all_amps_vel_list))
-    all_press_array = (np.hstack(np.asarray(all_press_list)))
-    all_h_array = (np.asarray(all_h_list)).reshape(len(all_h_list), 1)
-    all_v_array = (np.asarray(all_v_list)).reshape(len(all_v_list), 1)
-    all_m_array = (np.asarray(all_m_list)).reshape(len(all_m_list), 1)
-    all_times_array = (np.asanyarray(all_times_list)).reshape(len(all_times_list), 1)
-    all_north_poles_array = (np.asarray(all_north_poles_list)).reshape(len(all_north_poles_list), 1)
-    all_south_poles_array = (np.asarray(all_south_poles_list)).reshape(len(all_south_poles_list), 1)
-    all_max_radii_array = (np.asarray(all_maximum_radii_list)).reshape(len(all_maximum_radii_list), 1)
-
-
-    #Calculating other variables
-    center_coef_rest = center_coefficient_of_restitution(all_v_list, all_m_list)
-    alpha_coef_rest = alpha_coefficient_of_restitution(all_h_list, all_v_list, all_m_list, all_times_list, Bo, We)[0]
-    contact_time_nd = alpha_coefficient_of_restitution(all_h_list, all_v_list, all_m_list, all_times_list, Bo, We)[1]
-    contact_time_ind = alpha_coefficient_of_restitution(all_h_list, all_v_list, all_m_list, all_times_list, Bo, We)[2]
-    min_north_pole_h_nd = min_north_pole_height(all_north_poles_list, all_times_list)[0]
-    time_min_north_pole_h_nd = min_north_pole_height(all_north_poles_list, all_times_list)[1]
-    max_radius_nd = max_radius_over_t(all_maximum_radii_list, contact_time_ind, all_times_list)[0]
-    time_max_radius_nd = max_radius_over_t(all_maximum_radii_list, contact_time_ind, all_times_list)[1]
-    max_contact_radius_nd = maximum_contact_radius(all_amps_list, all_m_list, all_times_list, n_thetas, theta_vec)[0]
-    time_max_contact_radius_nd = maximum_contact_radius(all_amps_list, all_m_list, all_times_list, n_thetas, theta_vec)[1]
-    max_radial_project_nd = max_radial_projection(all_amps_list, n_thetas, all_times_list, theta_vec)[0]
-    time_max_radial_project_nd = max_radial_projection(all_amps_list, n_thetas, all_times_list, theta_vec)[1]
-    min_side_h_nd = min_side_height(all_amps_list, n_thetas, all_times_list, all_h_list, theta_vec)[0]
-    time_min_side_h_nd = min_side_height(all_amps_list, n_thetas, all_times_list, all_h_list, theta_vec)[1]
-
-    # Creating heights, radius and amplitudes plots and saving them
-    height_plots(all_north_poles_list, all_south_poles_list, all_h_list, all_times_list, folder_name)
-    maximum_radius_plot(all_maximum_radii_list, all_times_list, folder_name)
-    amplitudes_over_time_plot(all_amps_list, all_times_list, folder_name, n_thetas)
-    
-    # Save results to CSV
-    if contact_time_nd is not None:
-        contact_time_cgs = contact_time_nd*unit_time_in_CGS
-    else:
-        contact_time_cgs = None
         
-    min_north_pole_h_cgs = min_north_pole_h_nd*R_in_CGS
-    time_min_north_pole_h_cgs = time_min_north_pole_h_nd*unit_time_in_CGS
-    max_radius_cgs = max_radius_nd*R_in_CGS
-    time_max_radius_cgs = time_max_radius_nd*unit_time_in_CGS
-    max_contact_radius_cgs = max_contact_radius_nd*R_in_CGS
-    time_max_contact_radius_cgs = time_max_contact_radius_nd*unit_time_in_CGS
-    max_radial_project_cgs = max_radial_project_nd*R_in_CGS
-    time_max_radial_project_cgs = time_max_radial_project_nd*unit_time_in_CGS
-    min_side_h_cgs = min_side_h_nd*R_in_CGS
-    time_min_side_h_cgs = time_min_side_h_nd*unit_time_in_CGS
-
-    csv_file = os.path.join(desktop_path, 'simulation_results.csv')
+    csv_main = os.path.join(desktop_path, 'simulation_results.csv')
     csv_header = ['R_in_CGS', 'V_in_CGS', 
                     'Bo', 'We', 'Oh',
                     "Alpha Coefficient of restitution", "Center Coefficient of restitution", 
@@ -1022,49 +910,164 @@ def plot_and_save(R_in_CGS, g_in_CGS=9.8, T_end=10, n_thetas=40, n_sampling_time
                     'Time min side height ND', 'Time min side height CGS' 
                     ]
 
-    file_exists = os.path.isfile(csv_file)
+    roots, weights = roots_legendre(n_thetas)
+    cos_theta_vec = np.concatenate(([1], np.flip(roots)))
+    theta_vec = np.arccos(cos_theta_vec)
+    q_last = np.argmax(cos_theta_vec <= 0)
+    
+    for We in We_list: 
+        main_file_exists = os.path.isfile(csv_main)
 
-    with open(csv_file, mode='a', newline='') as file:
-        writer = csv.writer(file)
-        if not file_exists:
-            writer.writerow(csv_header)
-        writer.writerow([R_in_CGS, V_in_CGS,
-                        Bo, We, Oh, 
-                        alpha_coef_rest, center_coef_rest,
-                        contact_time_nd, contact_time_cgs,
-                        min_north_pole_h_nd, min_north_pole_h_cgs,
-                        time_min_north_pole_h_nd, time_min_north_pole_h_cgs,
-                        max_radius_nd, max_radius_cgs,
-                        time_max_radius_nd, time_max_radius_cgs,
-                        max_contact_radius_nd, max_contact_radius_cgs,
-                        time_max_contact_radius_nd, time_max_contact_radius_cgs,
-                        max_radial_project_nd, max_radial_project_cgs,
-                        time_max_radial_project_nd, time_max_radial_project_cgs,
-                        min_side_h_nd, min_side_h_cgs,
-                        time_min_side_h_nd, time_min_side_h_cgs])
+        if Bond == None:
+            Bo = rho_in_CGS * g_in_CGS * R_in_CGS**2/ sigma_in_CGS
+        else:
+            Bo = Bond
+
+        if Web == None:
+            We = rho_in_CGS*V_in_CGS**2*R_in_CGS/sigma_in_CGS
+
+        #if V_in_CGS == None:
+        #    V_in_CGS = np.sqrt((Web*sigma_in_CGS)/(rho_in_CGS*R_in_CGS))
+        
+        if Ohn == None:
+            Oh = nu_in_GCS * np.sqrt((rho_in_CGS)/(sigma_in_CGS*R_in_CGS))
+        else:
+            Oh = Ohn
+            
+        #units
+        unit_length_in_CGS = 1 #R_in_CGS
+        unit_time_in_CGS = np.sqrt(rho_in_CGS*R_in_CGS**3/sigma_in_CGS) if R_in_CGS else 1
+
+        if Bond == None and Web == None:
+            V = -np.sqrt(We)
+            H = H_in_CGS/unit_length_in_CGS
+
+        else:
+            #Initial height
+            H_in_CGS = R_in_CGS if R_in_CGS else 1
+
+            #Dimensionless initial conditions
+            V = -np.sqrt(We)
+            H = H_in_CGS/unit_length_in_CGS
+
+        folder_name = os.path.join(desktop_path, f'simulation_We={We}_Oh={Oh}_Bo={Bo}_modes={n_thetas}')
+
+        # Create the subdirectory for this simulation
+        if not os.path.exists(folder_name):
+            os.makedirs(folder_name)
+            
+        #Running Simulations
+        simulation_results = running_simulation(n_thetas, n_sampling_time_L_mode, T_end, H, V, Bo, theta_vec, Oh)
+
+        #Variables to store values of simulation
+        all_amps_list = simulation_results[0]
+        all_amps_vel_list = simulation_results[1]
+        all_press_list = simulation_results[2]
+        all_h_list = simulation_results[3]
+        all_v_list = simulation_results[4]
+        all_m_list = simulation_results[5]
+        all_north_poles_list = simulation_results[6]
+        all_maximum_radii_list = simulation_results[8]
+        all_times_list_original = simulation_results[9]
+        all_times_list = all_times_list_original[: len(all_m_list)]
+        all_south_poles_list = simulation_results[7]
 
 
-    amps_file = os.path.join(folder_name, 'all_amps.csv')
-    np.savetxt(amps_file, np.transpose(all_amps_array), delimiter=',')
-    amps_vel_file = os.path.join(folder_name, 'all_amps_vel.csv')
-    np.savetxt(amps_vel_file, np.transpose(all_amps_vel_array), delimiter=',')
-    press_file = os.path.join(folder_name, 'all_press.csv')
-    np.savetxt(press_file, np.transpose(all_press_array), delimiter=',')
+        #Reshaping lists to arrays for easier storing in CSV files
+        all_amps_array = np.hstack(np.asarray(all_amps_list))
+        all_amps_vel_array = np.hstack(np.asarray(all_amps_vel_list))
+        all_press_array = (np.hstack(np.asarray(all_press_list)))
+        all_h_array = (np.asarray(all_h_list)).reshape(len(all_h_list), 1)
+        all_v_array = (np.asarray(all_v_list)).reshape(len(all_v_list), 1)
+        all_m_array = (np.asarray(all_m_list)).reshape(len(all_m_list), 1)
+        all_times_array = (np.asanyarray(all_times_list)).reshape(len(all_times_list), 1)
+        all_north_poles_array = (np.asarray(all_north_poles_list)).reshape(len(all_north_poles_list), 1)
+        all_south_poles_array = (np.asarray(all_south_poles_list)).reshape(len(all_south_poles_list), 1)
+        all_max_radii_array = (np.asarray(all_maximum_radii_list)).reshape(len(all_maximum_radii_list), 1)
 
 
-    concatenated_array = np.hstack((all_times_array, all_h_array, all_v_array, all_m_array, all_north_poles_array, all_south_poles_array, all_max_radii_array))
+        #Calculating other variables
+        center_coef_rest = center_coefficient_of_restitution(all_v_list, all_m_list)
+        alpha_coef_rest = alpha_coefficient_of_restitution(all_h_list, all_v_list, all_m_list, all_times_list, Bo, We)[0]
+        contact_time_nd = alpha_coefficient_of_restitution(all_h_list, all_v_list, all_m_list, all_times_list, Bo, We)[1]
+        contact_time_ind = alpha_coefficient_of_restitution(all_h_list, all_v_list, all_m_list, all_times_list, Bo, We)[2]
+        min_north_pole_h_nd = min_north_pole_height(all_north_poles_list, all_times_list)[0]
+        time_min_north_pole_h_nd = min_north_pole_height(all_north_poles_list, all_times_list)[1]
+        max_radius_nd = max_radius_over_t(all_maximum_radii_list, contact_time_ind, all_times_list)[0]
+        time_max_radius_nd = max_radius_over_t(all_maximum_radii_list, contact_time_ind, all_times_list)[1]
+        max_contact_radius_nd = maximum_contact_radius(all_amps_list, all_m_list, all_times_list, n_thetas, theta_vec)[0]
+        time_max_contact_radius_nd = maximum_contact_radius(all_amps_list, all_m_list, all_times_list, n_thetas, theta_vec)[1]
+        max_radial_project_nd = max_radial_projection(all_amps_list, n_thetas, all_times_list, theta_vec)[0]
+        time_max_radial_project_nd = max_radial_projection(all_amps_list, n_thetas, all_times_list, theta_vec)[1]
+        min_side_h_nd = min_side_height(all_amps_list, n_thetas, all_times_list, all_h_list, theta_vec)[0]
+        time_min_side_h_nd = min_side_height(all_amps_list, n_thetas, all_times_list, all_h_list, theta_vec)[1]
 
-    csv_file = os.path.join(folder_name, 'simulation_results_extra.csv')
-    csv_header = ['Times', 'H', 'V', 'M'] #, 'North Pole', 'South Pole', 'Maximum Radius at t']
+        # Creating heights, radius and amplitudes plots and saving them
+        height_plots(all_north_poles_list, all_south_poles_list, all_h_list, all_times_list, folder_name)
+        print('height_plots')
+        maximum_radius_plot(all_maximum_radii_list, all_times_list, folder_name)
+        print('maximum_radius_plot')
+        amplitudes_over_time_plot(all_amps_list, all_times_list, folder_name, n_thetas)
+        print('amplitudes_over_time_plot')
+        
+        # Save results to CSV
+        if contact_time_nd is not None:
+            contact_time_cgs = contact_time_nd*unit_time_in_CGS
+        else:
+            contact_time_cgs = None
+            
+        min_north_pole_h_cgs = min_north_pole_h_nd*R_in_CGS if R_in_CGS else min_north_pole_h_nd
+        time_min_north_pole_h_cgs = time_min_north_pole_h_nd*unit_time_in_CGS
+        max_radius_cgs = max_radius_nd*R_in_CGS if R_in_CGS else max_radius_nd
+        time_max_radius_cgs = time_max_radius_nd*unit_time_in_CGS
+        max_contact_radius_cgs = max_contact_radius_nd*R_in_CGS if R_in_CGS else max_contact_radius_nd
+        time_max_contact_radius_cgs = time_max_contact_radius_nd*unit_time_in_CGS
+        max_radial_project_cgs = max_radial_project_nd*R_in_CGS if R_in_CGS else max_radial_project_nd
+        time_max_radial_project_cgs = time_max_radial_project_nd*unit_time_in_CGS
+        min_side_h_cgs = min_side_h_nd*R_in_CGS if R_in_CGS else min_side_h_nd
+        time_min_side_h_cgs = time_min_side_h_nd*unit_time_in_CGS
+        
+        with open(csv_main, mode='a', newline='') as file:
+            print('writing to csv file')
+            writer = csv.writer(file)
+            if not main_file_exists:
+                writer.writerow(csv_header)
+            writer.writerow([R_in_CGS, V_in_CGS,
+                            Bo, We, Oh, 
+                            alpha_coef_rest, center_coef_rest,
+                            contact_time_nd, contact_time_cgs,
+                            min_north_pole_h_nd, min_north_pole_h_cgs,
+                            time_min_north_pole_h_nd, time_min_north_pole_h_cgs,
+                            max_radius_nd, max_radius_cgs,
+                            time_max_radius_nd, time_max_radius_cgs,
+                            max_contact_radius_nd, max_contact_radius_cgs,
+                            time_max_contact_radius_nd, time_max_contact_radius_cgs,
+                            max_radial_project_nd, max_radial_project_cgs,
+                            time_max_radial_project_nd, time_max_radial_project_cgs,
+                            min_side_h_nd, min_side_h_cgs,
+                            time_min_side_h_nd, time_min_side_h_cgs])
 
-    file_exists = os.path.isfile(csv_file)
+        amps_file = os.path.join(folder_name, 'all_amps.csv')
+        np.savetxt(amps_file, np.transpose(all_amps_array), delimiter=',')
+        amps_vel_file = os.path.join(folder_name, 'all_amps_vel.csv')
+        np.savetxt(amps_vel_file, np.transpose(all_amps_vel_array), delimiter=',')
+        press_file = os.path.join(folder_name, 'all_press.csv')
+        np.savetxt(press_file, np.transpose(all_press_array), delimiter=',')
 
-    with open(csv_file, mode='a', newline='') as file:
-        writer = csv.writer(file)
-        if not file_exists:
-            writer.writerow(csv_header)
-        for row in concatenated_array:
-            writer.writerow(row)
+
+        concatenated_array = np.hstack((all_times_array, all_h_array, all_v_array, all_m_array, all_north_poles_array, all_south_poles_array, all_max_radii_array))
+
+        csv_file = os.path.join(folder_name, 'simulation_results_extra.csv')
+        extra_csv_header = ['Times', 'H', 'V', 'M'] #, 'North Pole', 'South Pole', 'Maximum Radius at t']
+
+        file_exists = os.path.isfile(csv_file)
+
+        with open(csv_file, mode='a', newline='') as file:
+            writer = csv.writer(file)
+            if not file_exists:
+                writer.writerow(extra_csv_header)
+            for row in concatenated_array:
+                writer.writerow(row)
 
 
     return["All Files Saved"]
@@ -1072,12 +1075,12 @@ def plot_and_save(R_in_CGS, g_in_CGS=9.8, T_end=10, n_thetas=40, n_sampling_time
 # given an example of how to run the code
 if __name__ == "__main__":
     # Example parameters
-    R_in_CGS = 0.1  # Radius in cm
-    g_in_CGS = 9.8  # Gravity in cm/s^2
-    T_end = 10      # Duration of simulation in non-dimensional time
-    n_thetas = 40   # Number of sampled angles
-    n_sampling_time_L_mode = 16  # Sampling time for L mode
+    R_in_CGS = None  # Radius in cm
+    csv_path = "/Users/marina.levay/Documents/GitHub/drop_simulations/python_results/Bo=0_We=sweep.csv"
+    df = pd.read_csv(csv_path, delimiter=';')
+
+    Bo_list = sorted(df['Bo'].tolist())
+    We_list = sorted(df['We'].tolist())
 
     # Run the simulation and save results
-    plot_and_save(R_in_CGS, g_in_CGS, T_end, n_thetas, n_sampling_time_L_mode,
-              rho_in_CGS=1.0, sigma_in_CGS=72.0, nu_in_GCS=0.01, V_in_CGS=30.0)
+    plot_and_save(R_in_CGS, g_in_CGS=9.8, T_end=10, n_thetas=40, n_sampling_time_L_mode=16, Bond=0, Web=We_list, Ohn=0, rho_in_CGS=None, sigma_in_CGS=None, nu_in_GCS=None, V_in_CGS=None)
